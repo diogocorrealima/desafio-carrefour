@@ -58,5 +58,27 @@ namespace FluxoDeCaixa.Infra.Data.Repository
         {
             return await DbSet.Where(predicate).ToListAsync();
         }
+
+        public async Task<IEnumerable<Lancamento>> FindConsolidadeAsync(List<string> idsUsuario, int pagina, int quantidade)
+        {
+
+          var consolidados =  (await FindAsync
+                (lancamento =>
+                 (idsUsuario == null || idsUsuario.Any(idUsuario => idUsuario == lancamento.IdUsuario))
+                 ))
+                .Skip(pagina > 1 ? pagina * quantidade : 0)
+                .Take(quantidade)
+                .GroupBy(lancamento => lancamento.IdUsuario)
+                .Select(g => 
+                new 
+                {
+                   IdUsuario = g.Key,
+                   Valor = g.Where(lancamento => lancamento.Tipo == "Credito").Sum(x => x.Valor) - g.Where(lancamento => lancamento.Tipo == "Debito").Sum(x => x.Valor)
+
+                }).ToList();
+            var lancamentosConsolidados = consolidados.Select(lancamento => new Lancamento(Guid.Empty, lancamento.IdUsuario, lancamento.Valor));
+            return lancamentosConsolidados;
+
+        }
     }
 }

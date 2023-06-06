@@ -11,6 +11,7 @@ namespace FluxoDeCaixa.Application.Interfaces
     {
         Task<ValidationResult> Debito(LancamentoViewModel lancamentoViewModel);
         Task<ValidationResult> Credito(LancamentoViewModel lancamentoViewModel);
+        Task<List<LancamentoViewModel>> BuscarConsolidado(ConsolidadoViewModel consolidadoViewModel);
 
     }
 }

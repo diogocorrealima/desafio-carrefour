@@ -22,7 +22,7 @@ namespace FluxoDeCaixa.Services.Api.Controllers
 
         //[CustomAuthorize("Lancamentos", "Write")]
         [HttpPost("debito")]
-        public async Task<IActionResult> PostDebito([FromBody]LancamentoViewModel lancamentoViewModel)
+        public async Task<IActionResult> PostDebito([FromBody] LancamentoViewModel lancamentoViewModel)
         {
             return !ModelState.IsValid ? CustomResponse(ModelState) : CustomResponse(await _lancamentosAppService.Debito(lancamentoViewModel));
         }
@@ -33,7 +33,11 @@ namespace FluxoDeCaixa.Services.Api.Controllers
         {
             return !ModelState.IsValid ? CustomResponse(ModelState) : CustomResponse(await _lancamentosAppService.Credito(lancamentoViewModel));
         }
+        [HttpGet("consolidado")]
+        public async Task<IActionResult> GetConsolidado([FromQuery] ConsolidadoViewModel consolidadoViewModel)
+        {
+            return !ModelState.IsValid ? CustomResponse(ModelState) : CustomResponse(await _lancamentosAppService.BuscarConsolidado(consolidadoViewModel));
+        }
 
-       
     }
 }

@@ -17,17 +17,18 @@ namespace FluxoDeCaixa.Application.Services
     {
         private readonly IMapper _mapper;
         private readonly IMediatorHandler _mediator;
+        private readonly ILancamentoRepository _lancamentoRepository;
 
         public LancamentoAppService(IMapper mapper,
                                   ILancamentoRepository lancamentoRepository,
-                                  IMediatorHandler mediator,
-                                  IEventStoreRepository eventStoreRepository)
+                                  IMediatorHandler mediator)
         {
+            _lancamentoRepository = lancamentoRepository;
             _mapper = mapper;
             _mediator = mediator;
         }
 
-       
+
         public async Task<ValidationResult> Debito(LancamentoViewModel lancamentoViewModel)
         {
             var registerCommand = _mapper.Map<RegistrarDebitoCommand>(lancamentoViewModel);
@@ -38,7 +39,12 @@ namespace FluxoDeCaixa.Application.Services
             var registerCommand = _mapper.Map<RegistrarCreditoCommand>(lancamentoViewModel);
             return await _mediator.SendCommand(registerCommand);
         }
-        
+        public async Task<List<LancamentoViewModel>> BuscarConsolidado(ConsolidadoViewModel consolidadoViewModel)
+        {
+            var lancamentos = await _lancamentoRepository.FindConsolidadeAsync(consolidadoViewModel.IdsUsuario, consolidadoViewModel.Pagina, consolidadoViewModel.Quantidade);
+            return _mapper.Map<List<LancamentoViewModel>>(lancamentos);
+        }
+
 
         public void Dispose()
         {

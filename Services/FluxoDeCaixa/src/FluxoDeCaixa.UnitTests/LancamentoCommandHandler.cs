@@ -23,6 +23,7 @@ namespace FluxoDeCaixa.UnitTests
                 _lancamentoRepository.Object);
             _unitOfWork = new Mock<IUnitOfWork>();
 
+
         }
 
         [Fact]
@@ -35,18 +36,19 @@ namespace FluxoDeCaixa.UnitTests
             _mediator
                 .Setup(s => s.Send(command, It.IsAny<CancellationToken>()));
 
-            _lancamentoRepository
-                .Setup(s => s.Add(entity));
             _lancamentoRepository.Setup(s => s.Add(entity));
+            _unitOfWork.Setup(s => s.Commit().Result).Returns(true);
+            _lancamentoRepository.Setup(s => s.UnitOfWork).Returns(_unitOfWork.Object);
 
             // Act
-            await _lancamentoCommandHandler.Handle(command, new CancellationToken());
+            var result = await _lancamentoCommandHandler.Handle(command, new CancellationToken());
 
             // Assert
 
             //Assert.True(entity.TotalValue == 1000);
 
-            Assert.True((await _lancamentoRepository.Object.FindAsync(lancamento => lancamento.Id == entity.Id)).Any());
+            Assert.True(result.IsValid);
+            Assert.False(result.Errors.Any());
 
         }
         [Fact]
@@ -54,23 +56,23 @@ namespace FluxoDeCaixa.UnitTests
         {
             // Arrange
             var entity = new Lancamento(Guid.NewGuid(), Guid.NewGuid().ToString(), 100);
-            var command = new RegistrarDebitoCommand(entity.IdUsuario, entity.Valor);
+            var command = new RegistrarCreditoCommand(entity.IdUsuario, entity.Valor);
 
-            _mediator
-                .Setup(s => s.Send(command, It.IsAny<CancellationToken>()));
+            _mediator.Setup(s => s.Send(command, It.IsAny<CancellationToken>()));
 
-            _lancamentoRepository
-                .Setup(s => s.Add(entity));
             _lancamentoRepository.Setup(s => s.Add(entity));
+            _unitOfWork.Setup(s => s.Commit().Result).Returns(true);
+            _lancamentoRepository.Setup(s => s.UnitOfWork).Returns(_unitOfWork.Object);
 
             // Act
-            await _lancamentoCommandHandler.Handle(command, new CancellationToken());
+            var result = await _lancamentoCommandHandler.Handle(command, new CancellationToken());
 
             // Assert
 
             //Assert.True(entity.TotalValue == 1000);
 
-            Assert.True((await _lancamentoRepository.Object.FindAsync(lancamento => lancamento.Id == entity.Id)).Any());
+            Assert.True(result.IsValid);
+            Assert.False(result.Errors.Any());
 
         }
     }

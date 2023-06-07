@@ -1,36 +1,39 @@
 ﻿using AutoMapper;
 using FluxoDeCaixa.Application.Interfaces;
+using FluxoDeCaixa.Application.Services;
 using FluxoDeCaixa.Application.ViewModels;
 using FluxoDeCaixa.Domain.Interfaces;
 using FluxoDeCaixa.Domain.Models;
 using FluxoDeCaixa.Services.Api.Controllers;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
+using NetDevPack.Mediator;
 
 
 namespace FluxoDeCaixa.UnitTests
 {
     public class LancamentosControllerTests
     {
-        private readonly Mock<ILancamentoAppService> _lancamentoAppService;
+        private readonly Mock<ILancamentoAppService> _mockLancamentoAppService;
         private readonly Mock<ILancamentoRepository> _lancamentoRepository;
         private readonly Mock<ILogger<LancamentosController>> _logger;
-        private readonly Mock<IMediator> _mediator;
+        private readonly Mock<IMediatorHandler> _mediator;
         private readonly Mock<IMapper> _mapper;
         private readonly LancamentosController _lancamentosController;
+        private readonly ILancamentoAppService _lancamentoAppService;
+
+
 
         public LancamentosControllerTests()
         {
-            _lancamentoAppService = new Mock<ILancamentoAppService>();
+            _mockLancamentoAppService = new Mock<ILancamentoAppService>();
             _lancamentoRepository = new Mock<ILancamentoRepository>();
             _logger = new Mock<ILogger<LancamentosController>>();
-            _mediator = new Mock<IMediator>();
+            _mediator = new Mock<IMediatorHandler>();
             _mapper = new Mock<IMapper>();
-
             _lancamentosController = new LancamentosController(
-                _lancamentoAppService.Object
+                _mockLancamentoAppService.Object
                 );
         }
 
@@ -43,7 +46,7 @@ namespace FluxoDeCaixa.UnitTests
 
 
             _lancamentoRepository.Setup(s => s.Add(lancamento));
-            _lancamentoAppService.Setup(s => s.Debito(lancamentoVM)).ReturnsAsync(new FluentValidation.Results.ValidationResult());
+            _mockLancamentoAppService.Setup(s => s.Debito(lancamentoVM)).ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
             // Act
             var result = await _lancamentosController.PostDebito(lancamentoVM);
@@ -60,10 +63,10 @@ namespace FluxoDeCaixa.UnitTests
 
 
             _lancamentoRepository.Setup(s => s.Add(lancamento));
-            _lancamentoAppService.Setup(s => s.Credito(lancamentoVM)).ReturnsAsync(new FluentValidation.Results.ValidationResult());
+            _mockLancamentoAppService.Setup(s => s.Credito(lancamentoVM)).ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
             // Act
-            var result = await _lancamentosController.PostDebito(lancamentoVM);
+            var result = await _lancamentosController.PostCredito(lancamentoVM);
 
             // Assert
             Assert.IsType<OkObjectResult>(result);
@@ -83,17 +86,20 @@ namespace FluxoDeCaixa.UnitTests
             lancamentos[1].SetCredito();
             lancamentos[2].SetDebito();
             lancamentos[3].SetDebito();
+            var idsUsuario = new List<string> { idUsuario };
             var consolidadoVM = new ConsolidadoViewModel(1, 10, new List<string> { idUsuario });
+            var lancamentosConsolidados = new List<LancamentoViewModel> {
+                new LancamentoViewModel(idUsuario, 100)
+            };
 
-
-            _lancamentoRepository.Setup(s => s.FindConsolidadeAsync(consolidadoVM.IdsUsuario, consolidadoVM.Pagina, consolidadoVM.Quantidade));
-            _lancamentoRepository.Setup(s => s.FindAsync(e => true).Result).Returns(lancamentos.AsEnumerable());
+            _mockLancamentoAppService.Setup(s => s.BuscarConsolidado(consolidadoVM).Result).Returns(lancamentosConsolidados);
 
             // Act
             var result = await _lancamentosController.GetConsolidado(consolidadoVM);
 
             // Assert
             Assert.IsType<OkObjectResult>(result);
+            Assert.True(((ObjectResult)result).Value != null);
         }
     }
 }

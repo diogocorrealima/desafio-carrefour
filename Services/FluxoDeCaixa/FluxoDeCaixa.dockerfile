@@ -6,7 +6,7 @@ COPY . .
 
 ENV ASPNETCORE_ENVIRONMENT Staging
 
-# RUN dotnet test ./FluxoDeCaixa.UnitTests --logger "trx;LogFileName=/app/publish/testresultsUnit.trx"
+ RUN dotnet test ./src/FluxoDeCaixa.UnitTests --logger "trx;LogFileName=/app/publish/testresultsUnit.trx"
 
 RUN dotnet publish ./src/FluxoDeCaixa.Services.Api/FluxoDeCaixa.Services.Api.csproj -o /app/publish 
 
